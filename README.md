@@ -86,6 +86,12 @@ Sample Admin passwd
 user: admin@example.com
 passwd: example12345
 ```
+Here you can create some mail accounts. Then, you can login with created user/passwd credentials to Roundcube web interface page.
+
+## Roundcube
+```
+http://localhost/roundcube
+```
 ## To Do
 - certbot
 - clamav
