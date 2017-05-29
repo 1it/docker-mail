@@ -1,0 +1,5 @@
+user=usrname
+password=passwd
+dbname=ndb
+query=SELECT maildir FROM mailbox WHERE username='%s' AND active = 't'
+hosts=postgres

@@ -1,0 +1,5 @@
+user=usrname
+password=passwd
+dbname=mail
+query=SELECT maildir FROM mailbox,alias_domain WHERE alias_domain.alias_domain = '%d' and mailbox.username = '%u' || '@' || alias_domain.target_domain AND mailbox.active='t' AND alias_domain.active='t'
+hosts=postgres

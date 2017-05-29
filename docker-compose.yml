@@ -1,0 +1,86 @@
+version: '3'
+
+networks:
+    mail:
+
+volumes:
+    ssl:
+    mail:
+    db:
+    spool:
+
+services:
+  certs:
+    build: certs
+    volumes:
+      - "ssl:/etc/ssl"
+    env_file: docker-compose.env
+
+  postgres:
+    build: postgres
+    restart: always
+    volumes:
+      - "db:/var/lib/postgresql/data"
+    networks:
+      - mail
+    env_file: docker-compose.env
+
+  dovecot:
+    build: dovecot
+    restart: always
+    ports:
+      - "110:110"
+      - "143:143"
+      - "993:993"
+      - "995:995"
+    volumes:
+      - "mail:/var/mail"
+      - "ssl:/etc/ssl"
+    links:
+      - postgres
+    networks:
+      - mail
+    env_file: docker-compose.env
+
+  postfix:
+    build: postfix
+    restart: always
+    ports:
+      - "25:25"
+      - "465:465"
+      - "587:587"
+    volumes:
+      - "spool:/var/spool/postfix"
+      - "ssl:/etc/ssl"
+    links:
+      - postgres
+    depends_on:
+      - postgres
+    networks:
+      - mail
+    env_file: docker-compose.env
+
+  postfixadmin:
+    build: postfixadmin
+    restart: always
+    ports:
+      - "8080:80"
+    links:
+      - postgres
+    networks:
+      - mail
+    env_file: docker-compose.env
+
+  roundcube:
+    build: roundcube
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - "ssl:/etc/ssl"
+    links:
+      - postgres
+    networks:
+      - mail
+    env_file: docker-compose.env
+

@@ -1,0 +1,5 @@
+user=usrname
+password=passwd
+dbname=mail
+query = SELECT goto FROM alias,alias_domain WHERE alias_domain.alias_domain = '%d' and alias.address = '@' || alias_domain.target_domain AND alias.active='t' AND alias_domain.active='t'
+hosts=postgres

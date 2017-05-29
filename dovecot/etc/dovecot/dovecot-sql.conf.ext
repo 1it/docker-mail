@@ -1,0 +1,6 @@
+driver = pgsql
+connect = host=postgres dbname=ndb user=usrname password=passwd
+default_pass_scheme = MD5-CRYPT
+password_query = SELECT username, domain, password FROM mailbox WHERE username = '%u' AND active = 't'
+# Enable quota (optional)
+user_query = SELECT maildir, 8 AS uid, 8 AS gid, 'dict:storage=' || floor(quota/1000) || '::proxy::quota' as quota FROM mailbox WHERE username = '%u' AND active='t'
