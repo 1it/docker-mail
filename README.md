@@ -12,6 +12,18 @@ Docker-compose:
 ```
 sudo pip install docker-compose
 ```
+
+## Before you start
+Ensure that the iptables firewall is not blocking any of the standard mail ports:
+- 25
+- 465
+- 587
+- 110
+- 995
+- 143
+- 993
+- 80/8080
+
 If you want to recieve email you have to configure DNS. Like this:
 ```
 example.com         MX      10      example.com
@@ -70,8 +82,9 @@ Sample Admin passwd
 user: admin@example.com
 passwd: example12345
 ```
-## ToDo
-certbot
-clamav
-spamassasin
-sieve
+## To Do
+- certbot
+- clamav
+- spamassasin
+- sieve
+- any ideas?
