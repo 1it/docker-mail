@@ -71,7 +71,7 @@ Replace exmaple.com to your own domain:
 ```
 sed -i 's/example.com/your-domain/g' docker-compose.env
 ```
-Replace smaple password and secret key to your own.
+Replace sample password and secret key to your own.
 
 ## Run
 ```
