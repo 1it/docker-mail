@@ -1,6 +1,6 @@
 # Docker-Mail
 
-Dockerized mail stack 
+Dockerized mail stack:
  - Postfix (SMTP);
  - Dovecot (IMAP/POP3);
  - Postfixadmin (Mail accounts manage);
