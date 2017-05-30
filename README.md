@@ -6,7 +6,7 @@ Dockerized mail stack (Postfix/Dovecot/Postfixadmin/Roundcube/PostgreSQL)
 
 Latest docker (1.13.0 or greater):
 ```
-# curl -s https://get.docker.com/ | sudo sh
+curl -s https://get.docker.com/ | sudo sh
  ```
 Docker-compose (1.13.0 or greater):
 ```
