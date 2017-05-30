@@ -10,7 +10,7 @@
 // Currently supported db_providers: mysql, pgsql, sqlite, mssql or sqlsrv
 // For examples see http://pear.php.net/manual/en/package.database.mdb2.intro-dsn.php
 // NOTE: for SQLite use absolute path: 'sqlite:////full/path/to/sqlite.db?mode=0646'
-$config['db_dsnw'] = getenv('DB_DSNW');
+$config['db_dsnw'] = 'pgsql://usrname:passwd@postgres/roundcube';
 
 // ----------------------------------
 // IMAP
@@ -74,6 +74,8 @@ $config['smtp_conn_options'] = array(
      'verify_peer_name' => false,
   ),
 );
+
+$config['imap_auth_type'] = 'LOGIN';
 
 // provide an URL where a user can get support for this Roundcube installation
 // PLEASE DO NOT LINK TO THE ROUNDCUBE.NET WEBSITE HERE!

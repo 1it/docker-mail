@@ -19,6 +19,9 @@ RUN postconf -e myhostname=$MAILNAME
 RUN postconf -e mynetworks="127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128 $MY_NETWORKS"
 
 COPY etc/rsyslog.conf /etc/
-COPY docker-entrypoint.sh /usr/bin/
+COPY docker-entrypoint.sh /
 
-ENTRYPOINT ["docker-entrypoint.sh"]
+# Clean up
+RUN apt-get clean; rm -r /var/lib/apt/lists/*
+
+ENTRYPOINT ["/docker-entrypoint.sh"]

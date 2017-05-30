@@ -38,6 +38,9 @@ services:
       - "ssl:/etc/ssl"
     links:
       - postgres
+    depends_on:
+      - certs
+      - postgres
     networks:
       - mail
     env_file: docker-compose.env
@@ -55,6 +58,7 @@ services:
     links:
       - postgres
     depends_on:
+      - certs
       - postgres
     networks:
       - mail
@@ -66,6 +70,9 @@ services:
     ports:
       - "8080:80"
     links:
+      - postgres
+    depends_on:
+      - certs
       - postgres
     networks:
       - mail
@@ -79,6 +86,9 @@ services:
     volumes:
       - "ssl:/etc/ssl"
     links:
+      - postgres
+    depends_on:
+      - certs
       - postgres
     networks:
       - mail

@@ -35,6 +35,11 @@ sed -i "s/ndb/$DB_NAME/g" /etc/postfix/virtual_*
 sed -i "s/usrname/$USER_NAME/g" /etc/postfix/virtual_*
 sed -i "s/passwd/$USER_PASSWD/g" /etc/postfix/virtual_*
 
+# Update domain
+sed -i "s/example.com/$DOMAIN/g" /etc/postfix/main.cf
+
+echo $DOMAIN
+
 # Run postfix
 /usr/sbin/postfix start
 # Run rsyslog, log to stdout

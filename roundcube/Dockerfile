@@ -9,8 +9,9 @@ RUN echo "roundcube-core  roundcube/dbconfig-install      boolean true" > select
 
 RUN apt-get update
 RUN debconf-set-selections selections
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y apache2 ca-certificates roundcube roundcube-pgsql php7.0-pgsql php-net-idna2 sendmail
-RUN apt-get clean; rm -r /var/lib/apt/lists
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y apache2 ca-certificates roundcube roundcube-pgsql php7.0-pgsql php-net-idna2 sendmail postgresql-client locales
+RUN localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
+ENV LANG en_US.utf8
 
 RUN sed -i "s|#    Alias /roundcube /var/lib/roundcube|Alias /roundcube /var/lib/roundcube|g" /etc/apache2/conf-enabled/roundcube.conf
 
@@ -25,8 +26,13 @@ RUN ln -s /etc/roundcube /usr/share/roundcube/config
 RUN mkdir /usr/share/roundcube/logs /usr/share/roundcube/temp
 RUN chown -R www-data: /usr/share/roundcube/
 
-COPY docker-entrypoint.sh /usr/bin/
+RUN ln -sf /dev/stderr /var/lib/roundcube/logs/errors
 
-ENTRYPOINT ["docker-entrypoint.sh"]
+# Clean up
+RUN apt-get clean; rm -r /var/lib/apt/lists/*
+
+COPY docker-entrypoint.sh /
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
 
 CMD [ "/usr/sbin/apache2", "-DFOREGROUND" ]
