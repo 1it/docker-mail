@@ -1,6 +1,11 @@
 # Docker-Mail
 
-Dockerized mail stack (Postfix/Dovecot/Postfixadmin/Roundcube/PostgreSQL)
+Dockerized mail stack 
+ - Postfix (SMTP);
+ - Dovecot (IMAP/POP3);
+ - Postfixadmin (Mail accounts manage);
+ - Roundcube (IMAP Client);
+ - PostgreSQL (DB).
 
 ## Requirements
 
