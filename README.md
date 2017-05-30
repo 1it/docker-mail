@@ -4,11 +4,11 @@ Dockerized mail stack (Postfix/Dovecot/Postfixadmin/Roundcube/PostgreSQL)
 
 ## Requirements
 
-Latest docker:
+Latest docker (1.13.0 or greater):
 ```
-# curl -s https://get.docker.com/ | sh
+# curl -s https://get.docker.com/ | sudo sh
  ```
-Docker-compose:
+Docker-compose (1.13.0 or greater):
 ```
 sudo pip install docker-compose
 ```
