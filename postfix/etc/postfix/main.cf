@@ -14,7 +14,7 @@ inet_protocols = ipv4
 disable_mime_output_conversion = yes
 
 # Virtual transport parameters
-virtual_transport = lmtp:inet:dovecot:2525
+virtual_transport = lmtp:inet:dovecot:24
 
 virtual_mailbox_domains =
  pgsql:/etc/postfix/virtual_domains_maps.cf
