@@ -1,0 +1,17 @@
+# Binaries
+bin/
+tmp/
+
+# IDE
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Env secrets
+.env
+docker-compose.env
+
+# MacOS
+.DS_Store
