@@ -1,31 +1,21 @@
 [ req ]
-default_bits = 1024
+default_bits = 4096
 encrypt_key = yes
 distinguished_name = req_dn
 x509_extensions = cert_type
 prompt = no
 
 [ req_dn ]
-# country (2 letter code)
-C=US
-
-# State or Province Name (full name)
-ST=New York
-
-# Locality Name (eg. city)
-L=New York
-
-# Organization (eg. company)
-O=Certification Center
-
-# Organizational Unit Name (eg. section)
-OU=Reg
-
-# Common Name (*.example.com is also possible)
-CN=reg.example.com
-
-# E-mail contact
-emailAddress=register@example.com
+C=SSL_COUNTRY
+ST=SSL_STATE
+L=SSL_LOCALITY
+O=SSL_ORGANIZATION
+OU=SSL_ORGANIZATIONAL_UNIT
+CN=SSL_COMMON_NAME
+emailAddress=SSL_EMAIL
 
 [ cert_type ]
-nsCertType = server
+basicConstraints = critical,CA:true
+keyUsage = critical,keyCertSign,cRLSign
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer

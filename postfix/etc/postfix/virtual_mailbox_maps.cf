@@ -1,5 +1,2 @@
-user=usrname
-password=passwd
-dbname=ndb
-query=SELECT maildir FROM mailbox WHERE username='%s' AND active = 't'
-hosts=postgres
+dbpath = /var/mail/mail.db
+query = SELECT maildir FROM mailbox WHERE username='%s' AND active = '1'

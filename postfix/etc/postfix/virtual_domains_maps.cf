@@ -1,5 +1,2 @@
-user=usrname
-password=passwd
-dbname=mail
-query=SELECT domain FROM domain WHERE domain='%s' AND active = 't'
-hosts=postgres
+dbpath = /var/mail/mail.db
+query = SELECT domain FROM domain WHERE domain='%s' AND active = '1'

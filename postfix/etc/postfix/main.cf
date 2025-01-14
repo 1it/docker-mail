@@ -17,14 +17,14 @@ disable_mime_output_conversion = yes
 virtual_transport = lmtp:inet:dovecot:24
 
 virtual_mailbox_domains =
- pgsql:/etc/postfix/virtual_domains_maps.cf
+ sqlite:/etc/postfix/virtual_domains_maps.cf
 virtual_alias_maps =
- pgsql:/etc/postfix/virtual_alias_maps.cf,
- pgsql:/etc/postfix/virtual_alias_domain_maps.cf,
- pgsql:/etc/postfix/virtual_alias_domain_catchall_maps.cf
+ sqlite:/etc/postfix/virtual_alias_maps.cf,
+ sqlite:/etc/postfix/virtual_alias_domain_maps.cf,
+ sqlite:/etc/postfix/virtual_alias_domain_catchall_maps.cf
 virtual_mailbox_maps =
- pgsql:/etc/postfix/virtual_mailbox_maps.cf,
- pgsql:/etc/postfix/virtual_alias_domain_mailbox_maps.cf
+ sqlite:/etc/postfix/virtual_mailbox_maps.cf,
+ sqlite:/etc/postfix/virtual_alias_domain_mailbox_maps.cf
 
 # TLS parameters
 smtp_use_tls=yes
@@ -42,9 +42,9 @@ smtpd_tls_exclude_ciphers = aNULL, DES, 3DES, MD5, DES+MD5, RC4
 smtpd_tls_mandatory_protocols = !SSLv2, !SSLv3
 smtpd_tls_protocols = !SSLv2, !SSLv3
 
-smtpd_tls_cert_file=/etc/ssl/certs/smtp.example.com.crt
-smtpd_tls_key_file=/etc/ssl/private/smtp.example.com.key
-smtpd_tls_CAfile = /etc/ssl/certs/ca.crt
+smtpd_tls_cert_file=/etc/ssl/certs/mail.crt
+smtpd_tls_key_file=/etc/ssl/private/mail.key
+smtpd_tls_CAfile=/etc/ssl/certs/ca.crt
 smtpd_tls_dh1024_param_file = /etc/ssl/dhparams.pem
 smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
 
@@ -76,3 +76,16 @@ smtpd_recipient_restrictions =
        reject_non_fqdn_recipient,
        permit_mynetworks,
        permit
+
+smtpd_tls_auth_only=yes
+
+# Content filtering
+content_filter = scan:spamassassin:783, scan:clamav:3310
+
+# Add after-filter transport
+transport_maps = hash:/etc/postfix/transport
+
+# SpamAssassin configuration
+smtpd_milters = inet:spamassassin:783
+milter_default_action = accept
+milter_protocol = 6

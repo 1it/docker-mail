@@ -1,30 +1,61 @@
-FROM debian:stretch
+FROM debian:bookworm-slim AS builder
 
-EXPOSE 8080/tcp
+ENV POSTFIXADMIN_VERSION 3.3.15
+ENV DEBIAN_FRONTEND noninteractive
 
-VOLUME /var/www
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    wget \
+    unzip \
+    ca-certificates && \
+    wget -O postfixadmin.zip https://github.com/postfixadmin/postfixadmin/archive/postfixadmin-${POSTFIXADMIN_VERSION}.zip && \
+    unzip postfixadmin.zip && \
+    mv postfixadmin-postfixadmin-${POSTFIXADMIN_VERSION} /postfixadmin
 
-RUN apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -q -y --no-install-recommends apache2 postfixadmin ca-certificates php7.0-pgsql dovecot-core postgresql-client locales
-RUN localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
-ENV LANG en_US.utf8
+FROM debian:bookworm-slim
 
-COPY dbconfig.inc.php /etc/postfixadmin/dbconfig.inc.php
-COPY config.inc.php /etc/postfixadmin/config.inc.php
-RUN chown -R www-data: /usr/share/postfixadmin/templates_c/
+ENV APACHE_CONFDIR /etc/apache2
+ENV APACHE_ENVVARS $APACHE_CONFDIR/envvars
 
-# Copy sample database dump
-COPY mail.sql.gz /var/backups/
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    apache2 \
+    libapache2-mod-php \
+    php-cli \
+    php-imap \
+    php-sqlite3 \
+    php-json \
+    php-mbstring \
+    php-intl && \
+    rm -rf /var/lib/apt/lists/* && \
+    a2enmod rewrite
 
-# TransferLog /dev/stdout | ErrorLog /dev/stderr
-RUN ln -sf /dev/stdout /var/log/apache2/access.log
-RUN ln -sf /dev/stderr /var/log/apache2/error.log
+COPY --from=builder /postfixadmin /var/www/postfixadmin
+RUN mkdir -p /var/www/postfixadmin/templates_c && \
+    mkdir -p /var/www/postfixadmin/database && \
+    chown -R www-data:www-data /var/www/postfixadmin/database && \
+    chown -R www-data:www-data /var/www/postfixadmin
 
-# Clean up
-RUN apt-get clean; rm -r /var/lib/apt/lists/*
-
+COPY config.local.php /var/www/postfixadmin/config.local.php
+COPY apache.conf /etc/apache2/sites-available/000-default.conf
+COPY init-db.sh /
 COPY docker-entrypoint.sh /
+
+RUN chmod +x /docker-entrypoint.sh /init-db.sh && \
+    apt-get update && \
+    apt-get install -y sqlite3 && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN { \
+    echo '#!/bin/bash'; \
+    echo 'set -e'; \
+    echo 'source /etc/apache2/envvars'; \
+    echo 'apache2 -DFOREGROUND "$@"'; \
+} > /usr/local/bin/apache2-foreground && \
+chmod +x /usr/local/bin/apache2-foreground
+
+EXPOSE 80
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
-CMD [ "/usr/sbin/apache2", "-DFOREGROUND" ]
+CMD ["apache2-foreground"]

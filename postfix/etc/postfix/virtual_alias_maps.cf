@@ -1,5 +1,2 @@
-user=usrname
-password=passwd
-dbname=mail
-query = SELECT goto FROM alias WHERE address='%s' AND active = 't'
-hosts=postgres
+dbpath = /var/mail/mail.db
+query = SELECT goto FROM alias WHERE address='%s' AND active = '1'

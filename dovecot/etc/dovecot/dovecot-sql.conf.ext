@@ -1,6 +1,9 @@
-driver = pgsql
-connect = host=postgres dbname=ndb user=usrname password=passwd
-default_pass_scheme = MD5-CRYPT
-password_query = SELECT username, domain, password FROM mailbox WHERE username = '%u' AND active = 't'
-# Enable quota (optional)
-user_query = SELECT maildir, 8 AS uid, 8 AS gid, 'dict:storage=' || floor(quota/1000) || '::proxy::quota' as quota FROM mailbox WHERE username = '%u' AND active='t'
+driver = sqlite
+connect = /var/mail/mail.db
+default_pass_scheme = SHA512-CRYPT
+
+password_query = SELECT username as user, password, '/var/mail/%d/%u' as userdb_home, 'maildir:/var/mail/%d/%u' as userdb_mail, 5000 as userdb_uid, 5000 as userdb_gid FROM mailbox WHERE username = '%u' AND active = '1'
+
+user_query = SELECT '/var/mail/%d/%u' as home, 'maildir:/var/mail/%d/%u' as mail, 5000 as uid, 5000 as gid FROM mailbox WHERE username = '%u' AND active = '1'
+
+iterate_query = SELECT username AS user FROM mailbox WHERE active = '1'

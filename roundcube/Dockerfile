@@ -1,38 +1,47 @@
-FROM debian:stretch
+FROM debian:bookworm-slim AS builder
+
+ENV ROUNDCUBE_VERSION 1.6.9
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    wget \
+    ca-certificates && \
+    wget -O roundcube.tar.gz https://github.com/roundcube/roundcubemail/releases/download/${ROUNDCUBE_VERSION}/roundcubemail-${ROUNDCUBE_VERSION}-complete.tar.gz && \
+    tar xf roundcube.tar.gz && \
+    mv roundcubemail-${ROUNDCUBE_VERSION} /roundcube && \
+    rm roundcube.tar.gz
+
+FROM debian:bookworm-slim
+
+ENV APACHE_CONFDIR /etc/apache2
+ENV APACHE_ENVVARS $APACHE_CONFDIR/envvars
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    apache2 \
+    libapache2-mod-php \
+    php-cli \
+    php-curl \
+    php-intl \
+    php-json \
+    php-mbstring \
+    php-pgsql \
+    php-xml \
+    php-zip && \
+    rm -rf /var/lib/apt/lists/* && \
+    a2enmod rewrite
+
+COPY --from=builder /roundcube /var/www/roundcube
+RUN chown -R www-data:www-data /var/www/roundcube
+
+COPY config.inc.php /var/www/roundcube/config/
+COPY apache.conf /etc/apache2/sites-available/000-default.conf
+COPY docker-entrypoint.sh /
+
+RUN chmod +x /docker-entrypoint.sh
 
 EXPOSE 80
 
-RUN echo "roundcube-core  roundcube/language      select  en_US" > selections
-RUN echo "roundcube-core  roundcube/database-type select  pgsql" > selections
-RUN echo "roundcube-core  roundcube/pgsql/admin-pass      $pgsql_pass" > selections
-RUN echo "roundcube-core  roundcube/dbconfig-install      boolean true" > selections
-
-RUN apt-get update
-RUN debconf-set-selections selections
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y apache2 ca-certificates roundcube roundcube-pgsql php7.0-pgsql php-net-idna2 sendmail postgresql-client locales
-RUN localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
-ENV LANG en_US.utf8
-
-RUN sed -i "s|#    Alias /roundcube /var/lib/roundcube|Alias /roundcube /var/lib/roundcube|g" /etc/apache2/conf-enabled/roundcube.conf
-
-# TransferLog /dev/stdout
-RUN ln -sf /dev/stdout /var/log/apache2/access.log
-RUN ln -sf /dev/stderr /var/log/apache2/error.log
-
-COPY config.inc.php /etc/roundcube/config.inc.php
-COPY debian-db.php  /etc/roundcube/debian-db.php
-
-RUN ln -s /etc/roundcube /usr/share/roundcube/config
-RUN mkdir /usr/share/roundcube/logs /usr/share/roundcube/temp
-RUN chown -R www-data: /usr/share/roundcube/
-
-RUN ln -sf /dev/stderr /var/lib/roundcube/logs/errors
-
-# Clean up
-RUN apt-get clean; rm -r /var/lib/apt/lists/*
-
-COPY docker-entrypoint.sh /
-
 ENTRYPOINT ["/docker-entrypoint.sh"]
-
-CMD [ "/usr/sbin/apache2", "-DFOREGROUND" ]
+CMD ["apache2-foreground"]

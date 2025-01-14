@@ -1,0 +1,13 @@
+services:
+    cron:
+      image: 1it/certbot-cron:latest
+      environment:
+        # Let's Encrypt email (Required)
+        - LETSENCRYPT_EMAIL=admin@example.com
+        # Main domain (Required)
+        - MAIN_DOMAIN=example.com
+        # Additional domains (Optional)
+        - DOMAINS_LIST=example.com,www.example.com
+        # Jobs list (Optional)
+        - JOBS_LIST="* 1 * * 6 certbot renew --quiet" 
+

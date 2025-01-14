@@ -1,33 +1,28 @@
-version: '3'
-
 networks:
     mail:
+        name: mail_network
 
 volumes:
     ssl:
     mail:
-    db:
     spool:
 
 services:
   certs:
     build: certs
+    restart: "no"
     volumes:
       - "ssl:/etc/ssl"
-    env_file: docker-compose.env
-
-  postgres:
-    build: postgres
-    restart: always
-    volumes:
-      - "db:/var/lib/postgresql/data"
-    networks:
-      - mail
+    healthcheck:
+      test: ["CMD", "test", "-f", "/etc/ssl/certs/mail.crt"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     env_file: docker-compose.env
 
   dovecot:
     build: dovecot
-    restart: always
+    restart: unless-stopped
     ports:
       - "110:110"
       - "143:143"
@@ -36,61 +31,71 @@ services:
     volumes:
       - "mail:/var/mail"
       - "ssl:/etc/ssl"
-    links:
-      - postgres
-    depends_on:
-      - certs
-      - postgres
     networks:
       - mail
+    depends_on:
+      certs:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "test", "-f", "/var/run/dovecot/master.pid"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     env_file: docker-compose.env
 
   postfix:
     build: postfix
-    restart: always
+    restart: unless-stopped
     ports:
       - "25:25"
       - "465:465"
       - "587:587"
     volumes:
+      - "mail:/var/mail"
       - "spool:/var/spool/postfix"
       - "ssl:/etc/ssl"
-    links:
-      - postgres
-    depends_on:
-      - certs
-      - postgres
     networks:
       - mail
+    depends_on:
+      dovecot:
+        condition: service_healthy
+      certs:
+        condition: service_completed_successfully
     env_file: docker-compose.env
 
   postfixadmin:
     build: postfixadmin
-    restart: always
+    restart: unless-stopped
     ports:
       - "8080:80"
-    links:
-      - postgres
-    depends_on:
-      - certs
-      - postgres
-    networks:
-      - mail
-    env_file: docker-compose.env
-
-  roundcube:
-    build: roundcube
-    restart: always
-    ports:
-      - "80:80"
     volumes:
-      - "ssl:/etc/ssl"
-    links:
-      - postgres
-    depends_on:
-      - certs
-      - postgres
+      - "mail:/var/mail"
     networks:
       - mail
+    depends_on:
+      certs:
+        condition: service_completed_successfully
     env_file: docker-compose.env
 
+  clamav:
+    image: clamav/clamav:stable
+    restart: unless-stopped
+    networks:
+      - mail
+    healthcheck:
+      test: ["CMD", "clamdscan", "--ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  spamassassin:
+    build: spamassassin
+    restart: unless-stopped
+    networks:
+      - mail
+    healthcheck:
+      test: ["CMD", "spamassassin", "--lint"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    env_file: docker-compose.env

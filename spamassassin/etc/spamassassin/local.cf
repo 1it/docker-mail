@@ -1,0 +1,15 @@
+# Add to existing configuration
+lock_method flock
+
+# Logging configuration
+report_safe 0
+debug 1
+rewrite_header Subject [SPAM]
+syslog_facility stderr
+
+# Logging options
+add_header all Status _YESNO_, score=_SCORE_ required=_REQD_ tests=_TESTS_ autolearn=_AUTOLEARN_
+add_header spam Flag _YESNO_
+add_header all Level _STARS(*)_
+add_header all Checker-Version SpamAssassin _VERSION_ (_SUBVERSION_) on _HOSTNAME_ 
+

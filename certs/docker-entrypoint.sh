@@ -1,44 +1,63 @@
 #!/bin/bash
+set -e
 
-# Update openssl cnf files
-sed -i "s/example.com/$DOMAIN/g" /*.cnf
+echo "Starting certificate generation for ${DOMAIN}..."
 
-CA_CRT="ca/ca.crt"
-CA_KEY="private/ca.key"
+# Replace environment variables in OpenSSL config files
+for conf in /etc/ssl/*.cnf; do
+    sed -i \
+        -e "s|DOMAIN|${DOMAIN}|g" \
+        -e "s|SSL_COUNTRY|${SSL_COUNTRY}|g" \
+        -e "s|SSL_STATE|${SSL_STATE}|g" \
+        -e "s|SSL_LOCALITY|${SSL_LOCALITY}|g" \
+        -e "s|SSL_ORGANIZATION|${SSL_ORGANIZATION}|g" \
+        -e "s|SSL_ORGANIZATIONAL_UNIT|${SSL_ORGANIZATIONAL_UNIT}|g" \
+        -e "s|SSL_COMMON_NAME|${SSL_COMMON_NAME}|g" \
+        -e "s|SSL_EMAIL|${SSL_EMAIL}|g" \
+        "$conf"
+done
 
-KEYS=("imap.$DOMAIN.key" "smtp.$DOMAIN.key")
-CRTS=("imap.$DOMAIN.crt" "smtp.$DOMAIN.crt")
-REQS=("imap.$DOMAIN.csr" "smtp.$DOMAIN.csr")
-CNFS=("/dovecot-openssl.cnf" "/postfix-openssl.cnf")
-DHPF="/etc/ssl/dhparams.pem"
+# Generate CA if it doesn't exist
+if [ ! -f /etc/ssl/certs/ca.crt ]; then
+    echo "Generating CA private key for ${DOMAIN}"
+    openssl genrsa -out /etc/ssl/private/ca.key 4096
 
-# Prepare directories
-cd /etc/ssl/
-mkdir -p ca certs private reqs
+    echo "Generating CA certificate for ${DOMAIN}"
+    openssl req -new -x509 -days 3650 -key /etc/ssl/private/ca.key \
+        -out /etc/ssl/certs/ca.crt -config /etc/ssl/ca-openssl.cnf
 
-# Create own CA certificate
-if [ ! -f $CA_CRT ] || [ ! -f $CA_KEY ]; then
-    openssl genrsa -out $CA_KEY 4096
-    openssl req -new -x509 -sha256 -days 3650 -config /ca-openssl.cnf -key $CA_KEY -out $CA_CRT
-    cp $CA_CRT certs/
+    chmod 644 /etc/ssl/certs/ca.crt
+    chmod 600 /etc/ssl/private/ca.key
 fi
 
-length="${#KEYS[@]}"
-days="3650"
+# Generate mail server certificate
+if [ ! -f /etc/ssl/certs/mail.crt ]; then
+    echo "Generating mail server private key for ${DOMAIN}"
+    openssl genrsa -out /etc/ssl/private/mail.key 2048
 
-# Create imap/smtp certificates
-if [ ! -f "certs/${CRTS[0]}" ] || [ ! -f "private/${KEYS[0]}" ] || [ ! -f "certs/${CRTS[1]}" ] || [ ! -f "private/${KEYS[1]}" ]; then
-    for i in ${!KEYS[@]}; do
-        openssl genrsa -out private/${KEYS[i]} 4096
-        openssl req -new -key private/${KEYS[i]} -config ${CNFS[i]} -out reqs/${REQS[i]}
-        openssl x509 -req -days $days -CA $CA_CRT -CAkey $CA_KEY -CAcreateserial -extfile ${CNFS[i]} -in reqs/${REQS[i]} -out certs/${CRTS[i]}
-    done
+    echo "Generating mail server CSR for ${DOMAIN}"
+    openssl req -new -key /etc/ssl/private/mail.key \
+        -out /etc/ssl/certs/mail.csr -config /etc/ssl/postfix-openssl.cnf
+
+    echo "Signing mail server certificate with CA for ${DOMAIN}"
+    openssl x509 -req -days 365 \
+        -in /etc/ssl/certs/mail.csr \
+        -CA /etc/ssl/certs/ca.crt \
+        -CAkey /etc/ssl/private/ca.key \
+        -CAcreateserial \
+        -out /etc/ssl/certs/mail.crt \
+        -extfile /etc/ssl/postfix-openssl.cnf \
+        -extensions cert_type
+
+    chmod 644 /etc/ssl/certs/mail.crt
+    chmod 600 /etc/ssl/private/mail.key
 fi
 
-# Create DH-Group file
-if [ ! -f "$DHPF" ]; then
-    openssl dhparam -out $DHPF 2048
+# Generate DH parameters if they don't exist
+if [ ! -f /etc/ssl/dhparams.pem ]; then
+    echo "Generating DH parameters (this may take a while)..."
+    openssl dhparam -out /etc/ssl/dhparams.pem 2048
 fi
 
-update-ca-certificates
-openssl x509 -subject -fingerprint -noout -in $CA_CRT
+echo "Certificate generation completed successfully!"
+exit 0

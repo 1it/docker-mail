@@ -1,0 +1,41 @@
+networks:
+    mail:
+      name: mail_network
+
+volumes:
+    ssl:
+    spool:
+
+services:
+  certs:
+    build: certs
+    volumes:
+      - "ssl:/etc/ssl"
+    env_file: docker-compose.env
+    healthcheck:
+      test: ["CMD", "test", "-f", "/etc/ssl/certs/mail.crt"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  postfix:
+    build: postfix
+    restart: unless-stopped
+    ports:
+      - "25:25"
+      - "465:465"
+      - "587:587"
+    volumes:
+      - "spool:/var/spool/postfix"
+      - "ssl:/etc/ssl"
+    networks:
+      - mail
+    depends_on:
+      certs:
+        condition: service_healthy
+    env_file: docker-compose.env
+    healthcheck:
+      test: ["CMD-SHELL", "postfix status | grep 'is running'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3 
